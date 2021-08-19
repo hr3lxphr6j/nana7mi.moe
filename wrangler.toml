@@ -1,0 +1,19 @@
+name = "nana7mi"
+type = "javascript"
+zone_id = "c91854a307b4f0d7124454fd9af9cb18"
+account_id = "bc3277fe36873b49379b4a132a310714"
+routes = ["nana7mi.moe/*", "www.nana7mi.moe/*"]
+workers_dev = false
+kv_namespaces = [
+    { binding = "kvs", id = "d3af42a3dceb412d9ae466fc991b1579", preview_id = "01fa4aac8384490d8f6ca063a8578056" }
+]
+
+[build]
+command = "npm install && npm run build"
+[build.upload]
+format = "service-worker"
+
+[triggers]
+crons = [
+    "* * * * *"
+]
