@@ -1,5 +1,7 @@
 # [nana7mi.moe](https://nana7mi.moe)
 
+[![Deploy](https://github.com/hr3lxphr6j/nana7mi.moe/actions/workflows/deploy.yml/badge.svg)](https://github.com/hr3lxphr6j/nana7mi.moe/actions/workflows/deploy.yml)
+
 一个使用 `Typescript` 编写的页面，部署到`Cloudflare Workers`
 
 ## 常用命令
