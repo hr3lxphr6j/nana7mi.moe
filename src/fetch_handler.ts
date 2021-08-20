@@ -268,6 +268,17 @@ async function handleGetIndexPage(request: Request): Promise<Response> {
       }
   </script>
 
+  <h2>说点说点</h2>
+
+  <script src="https://utteranc.es/client.js"
+    repo="hr3lxphr6j/nana7mi.moe"
+    issue-term="pathname"
+    label="comment"
+    issue-number="3"
+    theme="github-light"
+    crossorigin="anonymous"
+    async>
+  </script>
   <hr />
 
   <span>Contact me: <a href="mailto: chigusa@chigusa.moe">chigusa@chigusa.moe</a></span><br>
