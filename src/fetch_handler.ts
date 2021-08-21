@@ -163,11 +163,10 @@ async function handleGetIndexPage(request: Request): Promise<Response> {
           <ul>
               <li><b>直播状态：</b>${status ? '<b>播了</b>' : '摸了'}</li>
               <li><b>房间名：</b>${liveInfo.title}</li>
-              ${
-                status
-                  ? `<li><b>本次开播时间</b>: ${liveInfo.live_time}</li>`
-                  : ''
-              }
+              ${status
+      ? `<li><b>本次开播时间</b>: ${liveInfo.live_time}</li>`
+      : ''
+    }
           </ul>
       </li>
       
@@ -182,15 +181,14 @@ async function handleGetIndexPage(request: Request): Promise<Response> {
       </li>
   </ul>
 
-  ${
-    ybbFlag === '1'
+  ${ybbFlag === '1'
       ? `<h2>ybb</h2>
   <div>
       <iframe src="//player.bilibili.com/player.html?aid=376524564&bvid=BV1wo4y1X7Tk&cid=365010431&page=1&high_quality=1" 
           scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true" width="100%" height="650"></iframe>
   </div>`
       : ''
-  }
+    }
   
   <h2>直播数据统计 Beta（自 2021/08/18 开始统计）</h2>
   <h3>过去 7 天每日的直播时长</h3>
@@ -268,8 +266,8 @@ async function handleGetIndexPage(request: Request): Promise<Response> {
       }
   </script>
 
+  ${ybbFlag === '1' ? `
   <h2>说点说点</h2>
-
   <script src="https://utteranc.es/client.js"
     repo="hr3lxphr6j/nana7mi.moe"
     issue-term="pathname"
@@ -278,7 +276,9 @@ async function handleGetIndexPage(request: Request): Promise<Response> {
     theme="github-light"
     crossorigin="anonymous"
     async>
-  </script>
+  </script>`: ""}
+
+  
   <hr />
 
   <span>Contact me: <a href="mailto: chigusa@chigusa.moe">chigusa@chigusa.moe</a></span><br>
