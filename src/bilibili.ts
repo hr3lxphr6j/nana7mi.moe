@@ -68,7 +68,10 @@ export async function getLiveRoomInfoWithoutCache(
 export async function getLiveRoomInfo(
   room_id: string | number,
 ): Promise<LiveRoomInfo> {
-  const cachedLiveInfo = await kvs.getWithMetadata(Consts.LIVE_INFO_CACHE_KEY, 'json')
+  const cachedLiveInfo = await kvs.getWithMetadata(
+    Consts.LIVE_INFO_CACHE_KEY,
+    'json',
+  )
   if (
     cachedLiveInfo != null &&
     cachedLiveInfo.metadata != null &&

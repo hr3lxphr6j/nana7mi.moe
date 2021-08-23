@@ -165,7 +165,11 @@ async function handleGetIndexPage(request: Request): Promise<Response> {
           <ul>
               <li><b>直播状态：</b>${status ? '<b>播了</b>' : '摸了'}</li>
               <li><b>房间名：</b>${liveInfo.title}</li>
-              ${status ? `<li><b>本次开播时间</b>: ${liveInfo.live_time}</li>` : ""}
+              ${
+                status
+                  ? `<li><b>本次开播时间</b>: ${liveInfo.live_time}</li>`
+                  : ''
+              }
           </ul>
       </li>
       
@@ -180,14 +184,15 @@ async function handleGetIndexPage(request: Request): Promise<Response> {
       </li>
   </ul>
 
-  ${ybbFlag === '1'
+  ${
+    ybbFlag === '1'
       ? `<h2>ybb</h2>
   <div>
       <iframe src="//player.bilibili.com/player.html?aid=376524564&bvid=BV1wo4y1X7Tk&cid=365010431&page=1&high_quality=1" 
           scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true" width="100%" height="650"></iframe>
   </div>`
       : ''
-    }
+  }
   
   <h2>直播数据统计 Beta（自 2021/08/18 开始统计）</h2>
   <h3>过去 7 天每日的直播时长</h3>
@@ -218,16 +223,22 @@ async function handleGetIndexPage(request: Request): Promise<Response> {
     ]
     $(document).ready(function () {
         $.ajax({
-            url: "/api/v1/lives/${Consts.ROOM_ID}/videos", success: function (result) {
-                result.forEach((item) => {
-                    var li = '<li><a href="/api/v1/lives/${Consts.ROOM_ID}/videos/?name=' + encodeURI(item) + '">' + item + '</a></li>'
+            url: "/api/v1/lives/${
+              Consts.ROOM_ID
+            }/videos", success: function (result) {
+                result.forEach(function (item) {
+                    var li = '<li><a href="/api/v1/lives/${
+                      Consts.ROOM_ID
+                    }/videos/?name=' + encodeURIComponent(item.name) + '">' + item.name + '</a>\t大小:' + (item.size/1024.0/1024/1024).toFixed(2) + 'GB</li>'
                     $("#videos").append(li)
                 })
             }
         });
         ['7d', '30d'].forEach(function (scale) {
             $.ajax({
-                url: "/api/v1/lives/${Consts.ROOM_ID}/metrics/sessions/duration?scale=" + scale, success: function (data) {
+                url: "/api/v1/lives/${
+                  Consts.ROOM_ID
+                }/metrics/sessions/duration?scale=" + scale, success: function (data) {
                     data.datasets[0].label = "小时"
                     data.datasets[0].backgroundColor = backgroundColor
                     data.datasets[0].borderColor = borderColor
@@ -249,7 +260,8 @@ async function handleGetIndexPage(request: Request): Promise<Response> {
     })
   </script>
 
-  ${ybbFlag === '1'
+  ${
+    ybbFlag === '1'
       ? `
   <h2>说点说点</h2>
   <script src="https://utteranc.es/client.js"
@@ -262,7 +274,7 @@ async function handleGetIndexPage(request: Request): Promise<Response> {
     async>
   </script>`
       : ''
-    }
+  }
 
   
   <hr />
@@ -291,8 +303,8 @@ async function handleGetVideoList(request: Request): Promise<Response> {
 async function handleGetVideo(request: Request): Promise<Response> {
   const url = new URL(request.url)
   const name = url.searchParams.get('name')
-  if (name == null || name === "") {
-    return new Response("query: \"name\" is empty", { status: 400 })
+  if (name == null || name === '') {
+    return new Response('query: "name" is empty', { status: 400 })
   }
   const fileUrl = await getVideoUrl(name)
   return Response.redirect(fileUrl, 302)
