@@ -1,6 +1,7 @@
 import { getLiveRoomInfo } from './bilibili'
 import { Consts } from './consts'
 import { getYDMStringByDate } from './utils'
+import { getVideoUrl, listVideos } from './s3'
 
 export async function handleRequest(request: Request): Promise<Response> {
   const url = new URL(request.url)
@@ -8,6 +9,10 @@ export async function handleRequest(request: Request): Promise<Response> {
   switch (url.pathname) {
     case `/api/v1/lives/${Consts.ROOM_ID}/metrics/sessions/duration`:
       return await handleGetLiveSessionsDurationMetrics(request)
+    case `/api/v1/lives/${Consts.ROOM_ID}/videos`:
+      return await handleGetVideoList(request)
+    case `/api/v1/lives/${Consts.ROOM_ID}/videos/`:
+      return await handleGetVideo(request)
     case '/':
       return await handleGetIndexPage(request)
     default:
@@ -125,6 +130,7 @@ async function handleGetIndexPage(request: Request): Promise<Response> {
       href="data:${faviconType};base64,${await kvs.get('favicon')}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/4.0.0/github-markdown.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.0/chart.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" referrerpolicy="no-referrer"></script>
   <style>
   body {
       box-sizing: border-box;
@@ -159,11 +165,7 @@ async function handleGetIndexPage(request: Request): Promise<Response> {
           <ul>
               <li><b>直播状态：</b>${status ? '<b>播了</b>' : '摸了'}</li>
               <li><b>房间名：</b>${liveInfo.title}</li>
-              ${
-                status
-                  ? `<li><b>本次开播时间</b>: ${liveInfo.live_time}</li>`
-                  : ''
-              }
+              ${status ? `<li><b>本次开播时间</b>: ${liveInfo.live_time}</li>` : ""}
           </ul>
       </li>
       
@@ -178,98 +180,76 @@ async function handleGetIndexPage(request: Request): Promise<Response> {
       </li>
   </ul>
 
-  ${
-    ybbFlag === '1'
+  ${ybbFlag === '1'
       ? `<h2>ybb</h2>
   <div>
       <iframe src="//player.bilibili.com/player.html?aid=376524564&bvid=BV1wo4y1X7Tk&cid=365010431&page=1&high_quality=1" 
           scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true" width="100%" height="650"></iframe>
   </div>`
       : ''
-  }
+    }
   
   <h2>直播数据统计 Beta（自 2021/08/18 开始统计）</h2>
   <h3>过去 7 天每日的直播时长</h3>
-  <canvas id="7days" width="400" height="200"></canvas>
+  <canvas id="bar-7d" width="400" height="200"></canvas>
   <h3>过去 30 天每日的直播时长</h3>
-  <canvas id="30days" width="400" height="200"></canvas>
-  <script>
-      backgroundColor = [
-          'rgba(255, 99, 132, 0.2)',
-          'rgba(54, 162, 235, 0.2)',
-          'rgba(255, 206, 86, 0.2)',
-          'rgba(75, 192, 192, 0.2)',
-          'rgba(153, 102, 255, 0.2)',
-          'rgba(255, 159, 64, 0.2)',
-          'rgba(255, 106, 126, 0.2)',
-      ]
-      borderColor = [
-          'rgba(255, 99, 132, 1)',
-          'rgba(54, 162, 235, 1)',
-          'rgba(255, 206, 86, 1)',
-          'rgba(75, 192, 192, 1)',
-          'rgba(153, 102, 255, 1)',
-          'rgba(255, 159, 64, 1)',
-          'rgba(255, 109, 264, 1)'
-      ]
-      
-      var xhr7d = new XMLHttpRequest();
-      xhr7d.open("GET", "/api/v1/lives/${
-        Consts.ROOM_ID
-      }/metrics/sessions/duration?scale=7d")
-      xhr7d.send()
-      xhr7d.onreadystatechange = function() {
-          if (this.readyState == 4 && this.status == 200) {
-              var data = JSON.parse(this.responseText);
-              var ctx = document.getElementById('7days').getContext('2d');
-              data.datasets[0].label = "小时"
-              data.datasets[0].backgroundColor = backgroundColor
-              data.datasets[0].borderColor = borderColor
-              data.datasets[0].borderWidth = 1
-              var chart1 = new Chart(ctx, {
-                  type: 'bar',
-                  data: data,
-                  options: {
-                      scales: {
-                          y: {
-                              beginAtZero: true
-                          }
-                      }
-                  }
-              });
-          }
-      }
+  <canvas id="bar-30d" width="400" height="200"></canvas>
 
-      var xhr30d = new XMLHttpRequest();
-      xhr30d.open("GET", "/api/v1/lives/${
-        Consts.ROOM_ID
-      }/metrics/sessions/duration?scale=30d")
-      xhr30d.send()
-      xhr30d.onreadystatechange = function() {
-          if (this.readyState == 4 && this.status == 200) {
-              var data = JSON.parse(this.responseText);
-              var ctx = document.getElementById('30days').getContext('2d');
-              data.datasets[0].backgroundColor = backgroundColor
-              data.datasets[0].borderColor = borderColor
-              data.datasets[0].borderWidth = 1
-              data.datasets[0].label = "小时"
-              var chart1 = new Chart(ctx, {
-                  type: 'bar',
-                  data: data,
-                  options: {
-                      scales: {
-                          y: {
-                              beginAtZero: true
-                          }
-                      }
-                  }
-              });
-          }
-      }
+  <h2>录像文件</h2>
+  <ul id="videos"></ul>
+  <script>
+    backgroundColor = [
+        'rgba(255, 99, 132, 0.2)',
+        'rgba(54, 162, 235, 0.2)',
+        'rgba(255, 206, 86, 0.2)',
+        'rgba(75, 192, 192, 0.2)',
+        'rgba(153, 102, 255, 0.2)',
+        'rgba(255, 159, 64, 0.2)',
+        'rgba(255, 106, 126, 0.2)',
+    ]
+    borderColor = [
+        'rgba(255, 99, 132, 1)',
+        'rgba(54, 162, 235, 1)',
+        'rgba(255, 206, 86, 1)',
+        'rgba(75, 192, 192, 1)',
+        'rgba(153, 102, 255, 1)',
+        'rgba(255, 159, 64, 1)',
+        'rgba(255, 109, 264, 1)'
+    ]
+    $(document).ready(function () {
+        $.ajax({
+            url: "/api/v1/lives/${Consts.ROOM_ID}/videos", success: function (result) {
+                result.forEach((item) => {
+                    var li = '<li><a href="/api/v1/lives/${Consts.ROOM_ID}/videos/?name=' + encodeURI(item) + '">' + item + '</a></li>'
+                    $("#videos").append(li)
+                })
+            }
+        });
+        ['7d', '30d'].forEach(function (scale) {
+            $.ajax({
+                url: "/api/v1/lives/${Consts.ROOM_ID}/metrics/sessions/duration?scale=" + scale, success: function (data) {
+                    data.datasets[0].label = "小时"
+                    data.datasets[0].backgroundColor = backgroundColor
+                    data.datasets[0].borderColor = borderColor
+                    data.datasets[0].borderWidth = 1
+                    var chart1 = new Chart($("#bar-" + scale), {
+                        type: 'bar',
+                        data: data,
+                        options: {
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+                }
+            });
+        })
+    })
   </script>
 
-  ${
-    ybbFlag === '1'
+  ${ybbFlag === '1'
       ? `
   <h2>说点说点</h2>
   <script src="https://utteranc.es/client.js"
@@ -282,7 +262,7 @@ async function handleGetIndexPage(request: Request): Promise<Response> {
     async>
   </script>`
       : ''
-  }
+    }
 
   
   <hr />
@@ -299,4 +279,21 @@ async function handleGetIndexPage(request: Request): Promise<Response> {
       },
     },
   )
+}
+
+async function handleGetVideoList(request: Request): Promise<Response> {
+  const lists = await listVideos()
+  return new Response(JSON.stringify(lists), {
+    headers: { 'content-type': 'application/json;charset=UTF-8' },
+  })
+}
+
+async function handleGetVideo(request: Request): Promise<Response> {
+  const url = new URL(request.url)
+  const name = url.searchParams.get('name')
+  if (name == null || name === "") {
+    return new Response("query: \"name\" is empty", { status: 400 })
+  }
+  const fileUrl = await getVideoUrl(name)
+  return Response.redirect(fileUrl, 302)
 }

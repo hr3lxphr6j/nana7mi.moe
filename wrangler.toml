@@ -1,3 +1,4 @@
+# https://developers.cloudflare.com/workers/cli-wrangler/configuration
 name = "nana7mi"
 type = "javascript"
 zone_id = "c91854a307b4f0d7124454fd9af9cb18"
