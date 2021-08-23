@@ -1,18 +1,12 @@
 import { getLiveRoomInfo } from './bilibili'
-import {
-  LIVE_SESSIONS_METRICS_CACHE_TTL,
-  LIVE_SESSIONS_METRICS_PREFIX,
-  LIVE_SESSION_PREFIX,
-  ROOM_ID,
-  SCALE_REGEX,
-} from './consts'
+import { Consts } from './consts'
 import { getYDMStringByDate } from './utils'
 
 export async function handleRequest(request: Request): Promise<Response> {
   const url = new URL(request.url)
   // simple routing
   switch (url.pathname) {
-    case `/api/v1/lives/${ROOM_ID}/metrics/sessions/duration`:
+    case `/api/v1/lives/${Consts.ROOM_ID}/metrics/sessions/duration`:
       return await handleGetLiveSessionsDurationMetrics(request)
     case '/':
       return await handleGetIndexPage(request)
@@ -23,7 +17,7 @@ export async function handleRequest(request: Request): Promise<Response> {
 
 async function getLiveSessionDurationByDate(date: Date): Promise<number> {
   const { year, month, day } = getYDMStringByDate(date)
-  const keyPrefix = `${LIVE_SESSION_PREFIX}:${year}-${month}-${day}_`
+  const keyPrefix = `${Consts.LIVE_SESSION_PREFIX}:${year}-${month}-${day}_`
   let duration = 0.0
   for (const keyEntry of (await kvs.list({ prefix: keyPrefix })).keys) {
     const key = keyEntry.name
@@ -33,7 +27,7 @@ async function getLiveSessionDurationByDate(date: Date): Promise<number> {
     }
 
     const fromDateStr = key
-      .replace(LIVE_SESSION_PREFIX + ':', '')
+      .replace(Consts.LIVE_SESSION_PREFIX + ':', '')
       .replace('_', ' ')
     // the date string in the key is a CST date but there is no time zone information,
     // convert CST(GMT+8) to UTC(GMT+0)
@@ -56,7 +50,7 @@ async function handleGetLiveSessionsDurationMetrics(
   if (_scale !== null) {
     scale = _scale
   }
-  const matchs = SCALE_REGEX.exec(scale)
+  const matchs = Consts.SCALE_REGEX.exec(scale)
   // verify input scale
   // TODO: support month
   if (
@@ -76,7 +70,9 @@ async function handleGetLiveSessionsDurationMetrics(
     )
   }
 
-  const cachedData = await kvs.get(LIVE_SESSIONS_METRICS_PREFIX + ':' + scale)
+  const cachedData = await kvs.get(
+    Consts.LIVE_SESSIONS_METRICS_PREFIX + ':' + scale,
+  )
   if (cachedData !== null && cachedData != '') {
     return new Response(cachedData, {
       headers: { 'content-type': 'application/json;charset=UTF-8' },
@@ -98,8 +94,8 @@ async function handleGetLiveSessionsDurationMetrics(
   }
 
   const resultDate = JSON.stringify(data)
-  await kvs.put(LIVE_SESSIONS_METRICS_PREFIX + ':' + scale, resultDate, {
-    expirationTtl: LIVE_SESSIONS_METRICS_CACHE_TTL,
+  await kvs.put(Consts.LIVE_SESSIONS_METRICS_PREFIX + ':' + scale, resultDate, {
+    expirationTtl: Consts.LIVE_SESSIONS_METRICS_CACHE_TTL,
   })
   return new Response(resultDate, {
     headers: { 'content-type': 'application/json;charset=UTF-8' },
@@ -113,7 +109,7 @@ async function handleGetIndexPage(request: Request): Promise<Response> {
     return Response.redirect(request.url + '?ybb=0', 302)
   }
 
-  const liveInfo = await getLiveRoomInfo(ROOM_ID)
+  const liveInfo = await getLiveRoomInfo(Consts.ROOM_ID)
   const status = liveInfo.live_status == 1
   const faviconType = 'image/jpg'
   return new Response(
@@ -163,10 +159,11 @@ async function handleGetIndexPage(request: Request): Promise<Response> {
           <ul>
               <li><b>直播状态：</b>${status ? '<b>播了</b>' : '摸了'}</li>
               <li><b>房间名：</b>${liveInfo.title}</li>
-              ${status
-      ? `<li><b>本次开播时间</b>: ${liveInfo.live_time}</li>`
-      : ''
-    }
+              ${
+                status
+                  ? `<li><b>本次开播时间</b>: ${liveInfo.live_time}</li>`
+                  : ''
+              }
           </ul>
       </li>
       
@@ -181,14 +178,15 @@ async function handleGetIndexPage(request: Request): Promise<Response> {
       </li>
   </ul>
 
-  ${ybbFlag === '1'
+  ${
+    ybbFlag === '1'
       ? `<h2>ybb</h2>
   <div>
       <iframe src="//player.bilibili.com/player.html?aid=376524564&bvid=BV1wo4y1X7Tk&cid=365010431&page=1&high_quality=1" 
           scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true" width="100%" height="650"></iframe>
   </div>`
       : ''
-    }
+  }
   
   <h2>直播数据统计 Beta（自 2021/08/18 开始统计）</h2>
   <h3>过去 7 天每日的直播时长</h3>
@@ -216,7 +214,9 @@ async function handleGetIndexPage(request: Request): Promise<Response> {
       ]
       
       var xhr7d = new XMLHttpRequest();
-      xhr7d.open("GET", "/api/v1/lives/${ROOM_ID}/metrics/sessions/duration?scale=7d")
+      xhr7d.open("GET", "/api/v1/lives/${
+        Consts.ROOM_ID
+      }/metrics/sessions/duration?scale=7d")
       xhr7d.send()
       xhr7d.onreadystatechange = function() {
           if (this.readyState == 4 && this.status == 200) {
@@ -241,7 +241,9 @@ async function handleGetIndexPage(request: Request): Promise<Response> {
       }
 
       var xhr30d = new XMLHttpRequest();
-      xhr30d.open("GET", "/api/v1/lives/${ROOM_ID}/metrics/sessions/duration?scale=30d")
+      xhr30d.open("GET", "/api/v1/lives/${
+        Consts.ROOM_ID
+      }/metrics/sessions/duration?scale=30d")
       xhr30d.send()
       xhr30d.onreadystatechange = function() {
           if (this.readyState == 4 && this.status == 200) {
@@ -266,7 +268,9 @@ async function handleGetIndexPage(request: Request): Promise<Response> {
       }
   </script>
 
-  ${ybbFlag === '1' ? `
+  ${
+    ybbFlag === '1'
+      ? `
   <h2>说点说点</h2>
   <script src="https://utteranc.es/client.js"
     repo="hr3lxphr6j/nana7mi.moe"
@@ -276,7 +280,9 @@ async function handleGetIndexPage(request: Request): Promise<Response> {
     theme="github-light"
     crossorigin="anonymous"
     async>
-  </script>`: ""}
+  </script>`
+      : ''
+  }
 
   
   <hr />

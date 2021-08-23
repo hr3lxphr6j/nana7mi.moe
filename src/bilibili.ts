@@ -1,4 +1,4 @@
-import { LIVE_INFO_CACHE_KEY, LIVE_INFO_TTL } from './consts'
+import { Consts } from './consts'
 
 export interface LiveRoomInfo {
   uid: number
@@ -68,17 +68,17 @@ export async function getLiveRoomInfoWithoutCache(
 export async function getLiveRoomInfo(
   room_id: string | number,
 ): Promise<LiveRoomInfo> {
-  const cachedLiveInfo = await kvs.getWithMetadata(LIVE_INFO_CACHE_KEY, 'json')
+  const cachedLiveInfo = await kvs.getWithMetadata(Consts.LIVE_INFO_CACHE_KEY, 'json')
   if (
     cachedLiveInfo != null &&
     cachedLiveInfo.metadata != null &&
     Math.round(Date.now()) / 1000 - (cachedLiveInfo.metadata as any).ts <
-      LIVE_INFO_TTL
+      Consts.LIVE_INFO_TTL
   ) {
     return cachedLiveInfo.value as LiveRoomInfo
   }
   const info = await getLiveRoomInfoWithoutCache(room_id)
-  await kvs.put(LIVE_INFO_CACHE_KEY, JSON.stringify(info), {
+  await kvs.put(Consts.LIVE_INFO_CACHE_KEY, JSON.stringify(info), {
     metadata: { ts: Math.round(Date.now()) / 1000 },
   })
   return info
