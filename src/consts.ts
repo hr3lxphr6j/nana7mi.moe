@@ -10,4 +10,6 @@ export const Consts = {
   LIVE_INFO_CACHE_KEY: `live:${ROOM_ID}:info`,
   LIVE_SESSIONS_METRICS_PREFIX: `live:${ROOM_ID}:metrics:sessions`,
   LIVE_SESSIONS_METRICS_CACHE_TTL: 6 * 60 * 60, // 6h
+  LIVE_VIDEOS_LIST_CACHE_KEY: `live:${ROOM_ID}:videos:list`,
+  LIVE_VIDEOS_LIST_CACHE_TTL: 30 * 60,
 }

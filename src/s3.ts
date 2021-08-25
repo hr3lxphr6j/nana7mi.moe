@@ -5,6 +5,7 @@ import {
   ListObjectsCommandOutput,
 } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
+import { Consts } from './consts'
 
 const s3_client = new S3Client({
   region: S3_REGION,
@@ -21,16 +22,28 @@ export interface VideoSpec {
 }
 
 export async function listVideos(): Promise<Array<VideoSpec>> {
-  const commnad = new ListObjectsCommand({
-    Bucket: S3_BUCKET_NAME,
-    Prefix: 'mp4/',
-  })
-  const resp: ListObjectsCommandOutput = await s3_client.send(commnad)
-  if (resp.Contents == null) {
+  let cachedList: ListObjectsCommandOutput | null = await kvs.get(
+    Consts.LIVE_VIDEOS_LIST_CACHE_KEY,
+    'json',
+  )
+  if (cachedList == null) {
+    cachedList = await s3_client.send(
+      new ListObjectsCommand({
+        Bucket: S3_BUCKET_NAME,
+        Prefix: 'mp4/',
+      }),
+    )
+    await kvs.put(
+      Consts.LIVE_VIDEOS_LIST_CACHE_KEY,
+      JSON.stringify(cachedList),
+      { expirationTtl: Consts.LIVE_VIDEOS_LIST_CACHE_TTL },
+    )
+  }
+  if (cachedList.Contents == null) {
     return []
   }
   const res = new Array()
-  for (let item of resp.Contents) {
+  for (let item of cachedList.Contents) {
     if (item == null || item.Key == null || !item.Key.endsWith('.mp4')) {
       continue
     }
