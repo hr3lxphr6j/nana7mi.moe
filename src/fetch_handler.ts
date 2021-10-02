@@ -194,7 +194,7 @@ async function handleGetIndexPage(request: Request): Promise<Response> {
       : ''
   }
   
-  <h2>直播数据统计 Beta（自 2021/08/18 开始统计）</h2>
+  <h2>直播数据统计</h2>
   <h3>过去 7 天每日的直播时长</h3>
   <canvas id="bar-7d" width="400" height="200"></canvas>
   <h3>过去 30 天每日的直播时长</h3>
