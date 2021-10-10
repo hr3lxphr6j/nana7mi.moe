@@ -201,7 +201,7 @@ async function handleGetIndexPage(request: Request): Promise<Response> {
   <canvas id="bar-30d" width="400" height="200"></canvas>
 
   <h2>录像文件</h2>
-  <h3>Bt Sync Key: BKJQZU66FKIFD7LDTUXP4VN65TRVBYI23</h3>
+  <h3>Bt Sync Key: BZPXSEYX2PZSGUR5BVZ7H3SEH5XA3XCVT</h3>
   <ul id="videos"></ul>
   <script>
     backgroundColor = [
