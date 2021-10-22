@@ -165,11 +165,10 @@ async function handleGetIndexPage(request: Request): Promise<Response> {
           <ul>
               <li><b>直播状态：</b>${status ? '<b>播了</b>' : '摸了'}</li>
               <li><b>房间名：</b>${liveInfo.title}</li>
-              ${
-                status
-                  ? `<li><b>本次开播时间</b>: ${liveInfo.live_time}</li>`
-                  : ''
-              }
+              ${status
+      ? `<li><b>本次开播时间</b>: ${liveInfo.live_time}</li>`
+      : ''
+    }
           </ul>
       </li>
       
@@ -184,15 +183,14 @@ async function handleGetIndexPage(request: Request): Promise<Response> {
       </li>
   </ul>
 
-  ${
-    ybbFlag === '1'
+  ${ybbFlag === '1'
       ? `<h2>ybb</h2>
   <div>
       <iframe src="//player.bilibili.com/player.html?aid=376524564&bvid=BV1wo4y1X7Tk&cid=365010431&page=1&high_quality=1" 
           scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true" width="100%" height="650"></iframe>
   </div>`
       : ''
-  }
+    }
   
   <h2>直播数据统计</h2>
   <h3>过去 7 天每日的直播时长</h3>
@@ -202,10 +200,51 @@ async function handleGetIndexPage(request: Request): Promise<Response> {
 
   <h2>录像文件</h2>
   <h3>Bt Sync Key: B5AJIWZPZFX6A7DVO5IZBU2ZIPMNMH53N</h3>
+  <script>
+    backgroundColor = [
+        'rgba(255, 99, 132, 0.2)',
+        'rgba(54, 162, 235, 0.2)',
+        'rgba(255, 206, 86, 0.2)',
+        'rgba(75, 192, 192, 0.2)',
+        'rgba(153, 102, 255, 0.2)',
+        'rgba(255, 159, 64, 0.2)',
+        'rgba(255, 106, 126, 0.2)',
+    ]
+    borderColor = [
+        'rgba(255, 99, 132, 1)',
+        'rgba(54, 162, 235, 1)',
+        'rgba(255, 206, 86, 1)',
+        'rgba(75, 192, 192, 1)',
+        'rgba(153, 102, 255, 1)',
+        'rgba(255, 159, 64, 1)',
+        'rgba(255, 109, 264, 1)'
+    ]
+    $(document).ready(function () {
+        ['7d', '30d'].forEach(function (scale) {
+            $.ajax({
+                url: "/api/v1/lives/${Consts.ROOM_ID
+    }/metrics/sessions/duration?scale=" + scale, success: function (data) {
+                    data.datasets[0].label = "小时"
+                    data.datasets[0].backgroundColor = backgroundColor
+                    data.datasets[0].borderColor = borderColor
+                    data.datasets[0].borderWidth = 1
+                    var chart1 = new Chart($("#bar-" + scale), {
+                        type: 'bar',
+                        data: data,
+                        options: {
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+                }
+            });
+        })
+    })
+  </script>
 
-  ${
-    ybbFlag === '1'
-      ? `
   <h2>说点说点</h2>
   <script src="https://utteranc.es/client.js"
     repo="hr3lxphr6j/nana7mi.moe"
@@ -215,11 +254,8 @@ async function handleGetIndexPage(request: Request): Promise<Response> {
     theme="github-light"
     crossorigin="anonymous"
     async>
-  </script>`
-      : ''
-  }
+  </script>
 
-  
   <hr />
 
   <span>Contact me: <a href="mailto: chigusa@chigusa.moe">chigusa@chigusa.moe</a></span><br>
