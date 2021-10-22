@@ -202,64 +202,6 @@ async function handleGetIndexPage(request: Request): Promise<Response> {
 
   <h2>录像文件</h2>
   <h3>Bt Sync Key: B5AJIWZPZFX6A7DVO5IZBU2ZIPMNMH53N</h3>
-  <ul id="videos"></ul>
-  <script>
-    backgroundColor = [
-        'rgba(255, 99, 132, 0.2)',
-        'rgba(54, 162, 235, 0.2)',
-        'rgba(255, 206, 86, 0.2)',
-        'rgba(75, 192, 192, 0.2)',
-        'rgba(153, 102, 255, 0.2)',
-        'rgba(255, 159, 64, 0.2)',
-        'rgba(255, 106, 126, 0.2)',
-    ]
-    borderColor = [
-        'rgba(255, 99, 132, 1)',
-        'rgba(54, 162, 235, 1)',
-        'rgba(255, 206, 86, 1)',
-        'rgba(75, 192, 192, 1)',
-        'rgba(153, 102, 255, 1)',
-        'rgba(255, 159, 64, 1)',
-        'rgba(255, 109, 264, 1)'
-    ]
-    $(document).ready(function () {
-        $.ajax({
-            url: "/api/v1/lives/${
-              Consts.ROOM_ID
-            }/videos", success: function (result) {
-                result.forEach(function (item) {
-                    var li = '<li><a href="/api/v1/lives/${
-                      Consts.ROOM_ID
-                    }/videos/?name=' + encodeURIComponent(item.name) + '">' + item.name + '</a>\t大小:' + (item.size/1024.0/1024/1024).toFixed(2) + 'GB</li>'
-                    $("#videos").append(li)
-                })
-            }
-        });
-        ['7d', '30d'].forEach(function (scale) {
-            $.ajax({
-                url: "/api/v1/lives/${
-                  Consts.ROOM_ID
-                }/metrics/sessions/duration?scale=" + scale, success: function (data) {
-                    data.datasets[0].label = "小时"
-                    data.datasets[0].backgroundColor = backgroundColor
-                    data.datasets[0].borderColor = borderColor
-                    data.datasets[0].borderWidth = 1
-                    var chart1 = new Chart($("#bar-" + scale), {
-                        type: 'bar',
-                        data: data,
-                        options: {
-                            scales: {
-                                y: {
-                                    beginAtZero: true
-                                }
-                            }
-                        }
-                    });
-                }
-            });
-        })
-    })
-  </script>
 
   ${
     ybbFlag === '1'
