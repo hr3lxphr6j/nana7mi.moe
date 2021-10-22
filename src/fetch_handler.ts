@@ -120,13 +120,13 @@ async function clean(request: Request): Promise<Response> {
     }
   }
   const url = new URL(request.url)
-  const dryRun = url.searchParams.get('dryrun')
-  if (dryRun == '1') {
+  const run = url.searchParams.get('run')
+  if (run === '1') {
     for (const key of targetList) {
       await kvs.delete(key)
     }
   }
-  return new Response(JSON.stringify({ 'targetList': targetList, 'dryRun': dryRun }),
+  return new Response(JSON.stringify({ 'targetList': targetList, 'run': run }),
     { headers: { 'content-type': 'application/json;charset=UTF-8' } })
 }
 
