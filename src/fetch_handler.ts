@@ -13,6 +13,8 @@ export async function handleRequest(request: Request): Promise<Response> {
       return await handleGetVideoList(request)
     case `/api/v1/lives/${Consts.ROOM_ID}/videos/`:
       return await handleGetVideo(request)
+    case `/api/v1/clean`:
+      return await clean(request)
     case '/':
       return await handleGetIndexPage(request)
     default:
@@ -105,6 +107,27 @@ async function handleGetLiveSessionsDurationMetrics(
   return new Response(resultDate, {
     headers: { 'content-type': 'application/json;charset=UTF-8' },
   })
+}
+
+async function clean(request: Request): Promise<Response> {
+  let targetList = new Array<string>()
+  // live:21452505:session:2021-08-24_01:03:57
+  for (const keyEntry of (await kvs.list({ prefix: Consts.LIVE_SESSION_PREFIX })).keys) {
+    const dateStr = keyEntry.name.replace(Consts.LIVE_SESSION_PREFIX + ':', '').replace('_', ' ')
+    const durationFromNow = new Date().getTime() - new Date(dateStr).getTime()
+    if (durationFromNow > (45 * 24 * 60 * 60 * 1000)) {
+      targetList.push(keyEntry.name)
+    }
+  }
+  const url = new URL(request.url)
+  const dryRun = url.searchParams.get('dryrun')
+  if (dryRun == '1') {
+    for (const key of targetList) {
+      await kvs.delete(key)
+    }
+  }
+  return new Response(JSON.stringify({ 'targetList': targetList, 'dryRun': dryRun }),
+    { headers: { 'content-type': 'application/json;charset=UTF-8' } })
 }
 
 async function handleGetIndexPage(request: Request): Promise<Response> {
