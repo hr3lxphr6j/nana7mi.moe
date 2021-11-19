@@ -1,7 +1,6 @@
 import { getLiveRoomInfo } from './bilibili'
 import { Consts } from './consts'
 import { getYDMStringByDate } from './utils'
-import { getVideoUrl, listVideos } from './s3'
 
 export async function handleRequest(request: Request): Promise<Response> {
   const url = new URL(request.url)
@@ -9,10 +8,6 @@ export async function handleRequest(request: Request): Promise<Response> {
   switch (url.pathname) {
     case `/api/v1/lives/${Consts.ROOM_ID}/metrics/sessions/duration`:
       return await handleGetLiveSessionsDurationMetrics(request)
-    case `/api/v1/lives/${Consts.ROOM_ID}/videos`:
-      return await handleGetVideoList(request)
-    case `/api/v1/lives/${Consts.ROOM_ID}/videos/`:
-      return await handleGetVideo(request)
     case `/api/v1/clean`:
       return await clean(request)
     case '/':
@@ -295,19 +290,3 @@ async function handleGetIndexPage(request: Request): Promise<Response> {
   )
 }
 
-async function handleGetVideoList(request: Request): Promise<Response> {
-  const lists = await listVideos()
-  return new Response(JSON.stringify(lists), {
-    headers: { 'content-type': 'application/json;charset=UTF-8' },
-  })
-}
-
-async function handleGetVideo(request: Request): Promise<Response> {
-  const url = new URL(request.url)
-  const name = url.searchParams.get('name')
-  if (name == null || name === '') {
-    return new Response('query: "name" is empty', { status: 400 })
-  }
-  const fileUrl = await getVideoUrl(name)
-  return Response.redirect(fileUrl, 302)
-}
