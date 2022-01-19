@@ -13,3 +13,9 @@ export const Consts = {
   LIVE_VIDEOS_LIST_CACHE_KEY: `live:${ROOM_ID}:videos:list`,
   LIVE_VIDEOS_LIST_CACHE_TTL: 30 * 60,
 }
+
+export const Redirects: Map<string, string> = new Map([
+  ['ybb.nana7mi.moe', 'https://www.bilibili.com/video/BV1wo4y1X7Tk'],
+  ['live.nana7mi.moe', 'https://live.bilibili.com/21452505'],
+  ['space.nana7mi.moe', 'https://space.bilibili.com/434334701']
+]);

@@ -1,9 +1,13 @@
 import { getLiveRoomInfo } from './bilibili'
-import { Consts } from './consts'
+import { Consts, Redirects } from './consts'
 import { getYDMStringByDate } from './utils'
 
 export async function handleRequest(request: Request): Promise<Response> {
   const url = new URL(request.url)
+  const location = Redirects.get(url.host)
+  if (location) {
+    return Response.redirect(location, 301)
+  }
   // simple routing
   switch (url.pathname) {
     case `/api/v1/lives/${Consts.ROOM_ID}/metrics/sessions/duration`:
