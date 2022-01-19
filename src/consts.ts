@@ -17,5 +17,6 @@ export const Consts = {
 export const Redirects: Map<string, string> = new Map([
   ['ybb.nana7mi.moe', 'https://www.bilibili.com/video/BV1wo4y1X7Tk'],
   ['live.nana7mi.moe', 'https://live.bilibili.com/21452505'],
-  ['space.nana7mi.moe', 'https://space.bilibili.com/434334701']
+  ['space.nana7mi.moe', 'https://space.bilibili.com/434334701'],
+  ['hjj.nana7mi.moe', 'https://www.bilibili.com/video/BV1R64y1x7BJ']
 ]);
