@@ -293,8 +293,6 @@ async function handleGetIndexPage(request: Request): Promise<Response> {
   <h3>过去 30 天每日的直播时长</h3>
   <canvas id="bar-30d" width="400" height="200"></canvas>
 
-  <h2>录像文件</h2>
-  <h3>Bt Sync Key: B5AJIWZPZFX6A7DVO5IZBU2ZIPMNMH53N</h3>
   <script>
     backgroundColor = [
         'rgba(255, 99, 132, 0.2)',
