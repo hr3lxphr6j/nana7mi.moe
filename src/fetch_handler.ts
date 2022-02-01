@@ -260,7 +260,7 @@ async function handleGetIndexPage(request: Request): Promise<Response> {
   <div>
     <video
         id="qhzz-video"
-        class="video-js vjs-fluid vjs-16-9 vjs-layout-medium"
+        class="video-js vjs-fluid vjs-16-9 vjs-layout-medium vjs-big-play-centered"
         controls
         preload="none"
         width="100%"
