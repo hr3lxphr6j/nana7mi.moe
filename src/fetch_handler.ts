@@ -1,13 +1,17 @@
-import { getLiveRoomInfo } from './bilibili'
-import { Consts, Redirects } from './consts'
-import { getYDMStringByDate } from './utils'
+import {getLiveRoomInfo} from './bilibili'
+import {Consts, Redirects} from './consts'
+import {getYDMStringByDate} from './utils'
+import {S3Client, HeadObjectCommand, GetObjectCommand} from '@aws-sdk/client-s3'
+import {getSignedUrl} from '@aws-sdk/s3-request-presigner'
 
 export async function handleRequest(request: Request): Promise<Response> {
   const url = new URL(request.url)
-  const location = Redirects.get(url.host)
-  if (location) {
-    return Response.redirect(location, 301)
+  if (Redirects.has(url.host)) {
+    return Response.redirect(Redirects.get(url.host) as string, 301)
   }
+  // if (url.host === 'assets.nana7mi.moe') {
+  //   return await handleGetAssets(request);
+  // }
   // simple routing
   switch (url.pathname) {
     case `/api/v1/lives/${Consts.ROOM_ID}/metrics/sessions/duration`:
@@ -17,15 +21,60 @@ export async function handleRequest(request: Request): Promise<Response> {
     case '/':
       return await handleGetIndexPage(request)
     default:
-      return new Response('not found', { status: 404 })
+      return new Response('not found', {status: 404})
   }
 }
 
+async function handleGetAssets(request: Request): Promise<Response> {
+  const url = new URL(request.url)
+  const obj_name = url.pathname.slice(1)
+  let s3_client: S3Client
+  try {
+    s3_client = new S3Client({
+      region: S3_REGION,
+      credentials: {
+        accessKeyId: S3_ACCESS_KEY,
+        secretAccessKey: S3_SECRET_KEY,
+      },
+    })
+  } catch (e: any) {
+    return new Response(`init s3 client failed, err: ${e}`, {
+      status: 500
+    })
+  }
+  // try {
+  //   const head_resp = await s3_client.send(new HeadObjectCommand({
+  //     Bucket: S3_BUCKET_NAME,
+  //     Key: obj_name,
+  //   }))
+  //
+  //   if (!head_resp.VersionId) {
+  //     return new Response(null, {status: 404})
+  //   }
+  // } catch (e: any) {
+  //   return new Response(`get object[${S3_BUCKET_NAME}/${obj_name}] metadata failed, err: ${e}`, {
+  //     status: 500
+  //   })
+  // }
+
+  const location = await getSignedUrl(
+    s3_client,
+    new GetObjectCommand({
+      Bucket: S3_BUCKET_NAME,
+      ResponseContentDisposition: 'attachment',
+      Key: obj_name,
+    }),
+    {expiresIn: 300},
+  )
+
+  return Response.redirect(location, 302)
+}
+
 async function getLiveSessionDurationByDate(date: Date): Promise<number> {
-  const { year, month, day } = getYDMStringByDate(date)
+  const {year, month, day} = getYDMStringByDate(date)
   const keyPrefix = `${Consts.LIVE_SESSION_PREFIX}:${year}-${month}-${day}_`
   let duration = 0.0
-  for (const keyEntry of (await kvs.list({ prefix: keyPrefix })).keys) {
+  for (const keyEntry of (await kvs.list({prefix: keyPrefix})).keys) {
     const key = keyEntry.name
     const value = await kvs.get(key)
     if (value === null) {
@@ -72,7 +121,7 @@ async function handleGetLiveSessionsDurationMetrics(
   if (Number(matchs[1]) != 7 && Number(matchs[1]) != 30) {
     return new Response(
       `Parameter "scale" only support "7d" or "30d", but: ${scale}`,
-      { status: 400 },
+      {status: 400},
     )
   }
 
@@ -81,18 +130,18 @@ async function handleGetLiveSessionsDurationMetrics(
   )
   if (cachedData !== null && cachedData != '') {
     return new Response(cachedData, {
-      headers: { 'content-type': 'application/json;charset=UTF-8' },
+      headers: {'content-type': 'application/json;charset=UTF-8'},
     })
   }
 
   const currentDate = Date.now()
-  let data = {
+  const data = {
     labels: new Array(),
-    datasets: [{ data: new Array() }],
+    datasets: [{data: new Array()}],
   }
   for (let i = Number(matchs[1]); i > 0; i--) {
     const date = new Date(currentDate - i * 24 * 60 * 60 * 1000)
-    const { month, day } = getYDMStringByDate(date)
+    const {month, day} = getYDMStringByDate(date)
     data.labels.push(`${month}/${day}`)
     const duration = await getLiveSessionDurationByDate(date)
     // convert to hour
@@ -104,14 +153,14 @@ async function handleGetLiveSessionsDurationMetrics(
     expirationTtl: Consts.LIVE_SESSIONS_METRICS_CACHE_TTL,
   })
   return new Response(resultDate, {
-    headers: { 'content-type': 'application/json;charset=UTF-8' },
+    headers: {'content-type': 'application/json;charset=UTF-8'},
   })
 }
 
 async function clean(request: Request): Promise<Response> {
-  let targetList = new Array<string>()
+  const targetList = new Array<string>()
   // live:21452505:session:2021-08-24_01:03:57
-  for (const keyEntry of (await kvs.list({ prefix: Consts.LIVE_SESSION_PREFIX })).keys) {
+  for (const keyEntry of (await kvs.list({prefix: Consts.LIVE_SESSION_PREFIX})).keys) {
     const dateStr = keyEntry.name.replace(Consts.LIVE_SESSION_PREFIX + ':', '').replace('_', ' ')
     const durationFromNow = new Date().getTime() - new Date(dateStr).getTime()
     if (durationFromNow > (45 * 24 * 60 * 60 * 1000)) {
@@ -125,8 +174,8 @@ async function clean(request: Request): Promise<Response> {
       await kvs.delete(key)
     }
   }
-  return new Response(JSON.stringify({ 'targetList': targetList, 'run': run }),
-    { headers: { 'content-type': 'application/json;charset=UTF-8' } })
+  return new Response(JSON.stringify({'targetList': targetList, 'run': run}),
+    {headers: {'content-type': 'application/json;charset=UTF-8'}})
 }
 
 async function handleGetIndexPage(request: Request): Promise<Response> {
@@ -150,9 +199,11 @@ async function handleGetIndexPage(request: Request): Promise<Response> {
       rel="icon" 
       type="${faviconType}" 
       href="data:${faviconType};base64,${await kvs.get('favicon')}">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/4.0.0/github-markdown.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.0/chart.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" referrerpolicy="no-referrer"></script>
+  <link rel="stylesheet" href="https://lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/github-markdown-css/4.0.0/github-markdown.min.css">
+  <link href="https://lf9-cdn-tos.bytecdntp.com/cdn/expire-1-M/video.js/7.11.5/video-js.min.css" type="text/css" rel="stylesheet" />
+  <script src="https://lf9-cdn-tos.bytecdntp.com/cdn/expire-1-M/video.js/7.11.5/video.min.js" type="application/javascript"></script>
+  <script src="https://lf6-cdn-tos.bytecdntp.com/cdn/expire-1-M/Chart.js/3.5.1/chart.min.js"></script>
+  <script src="https://lf6-cdn-tos.bytecdntp.com/cdn/expire-1-M/jquery/3.5.1/jquery.min.js" referrerpolicy="no-referrer"></script>
   <style>
   body {
       box-sizing: border-box;
@@ -205,6 +256,28 @@ async function handleGetIndexPage(request: Request): Promise<Response> {
       </li>
   </ul>
 
+  <h2>七海中举</h2>
+  <div>
+    <video
+        id="qhzz-video"
+        class="video-js vjs-fluid vjs-16-9 vjs-layout-medium"
+        controls
+        preload="none"
+        width="100%"
+        height="650"
+        poster="//d23nnf6i8maqjf.cloudfront.net/808663844.cover.png"
+        data-setup='{}'
+      >
+        <source src="//d23nnf6i8maqjf.cloudfront.net/808663844.mp4" type="video/mp4" />
+        <p class="vjs-no-js">
+          To view this video please enable JavaScript, and consider upgrading to a
+          web browser that
+          <a href="https://videojs.com/html5-video-support/" target="_blank"
+            >supports HTML5 video</a
+          >
+        </p>
+    </video>
+  </div>
   ${ybbFlag === '1'
       ? `<h2>ybb</h2>
   <div>
