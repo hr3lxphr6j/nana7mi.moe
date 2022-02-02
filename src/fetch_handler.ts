@@ -257,7 +257,10 @@ async function handleGetIndexPage(request: Request): Promise<Response> {
   </ul>
 
   <h2>七海中举</h2>
-  <div><a href="https://www.bilibili.com/video/BV11q4y1h7aC">2022-02-01 补档</a></div>
+  <div>
+    <ul>
+        <li><a href="https://www.bilibili.com/video/BV11q4y1h7aC">2022-02-01 补档</a></div></li>
+    </ul>
   <div>
     <video
         id="qhzz-video"
