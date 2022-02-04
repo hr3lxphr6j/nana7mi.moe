@@ -269,10 +269,10 @@ async function handleGetIndexPage(request: Request): Promise<Response> {
         preload="none"
         width="100%"
         height="650"
-        poster="${getCloudfrontUrl("808663844.cover.png", CLOUD_FRONT_KEY)}"
+        poster="${await getCloudfrontUrl("808663844.cover.png", CLOUD_FRONT_KEY)}"
         data-setup='{}'
       >
-        <source src="${getCloudfrontUrl("808663844.mp4", CLOUD_FRONT_KEY)}" type="video/mp4" />
+        <source src="${await getCloudfrontUrl("808663844.mp4", CLOUD_FRONT_KEY)}" type="video/mp4" />
         <p class="vjs-no-js">
           To view this video please enable JavaScript, and consider upgrading to a
           web browser that

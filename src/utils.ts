@@ -1,4 +1,3 @@
-import {BinaryLike, createHmac, KeyObject} from "crypto";
 import {Consts} from "./consts";
 
 export function getYDMStringByDate(date: Date) {
@@ -12,14 +11,21 @@ export function getYDMStringByDate(date: Date) {
   }
 }
 
+function bufferToHex(buffer: ArrayBuffer): string {
+  return [...new Uint8Array(buffer)]
+    .map(b => b.toString(16).padStart(2, "0"))
+    .join("");
+}
 
-export function getCloudfrontUrl(object_name: string, key: BinaryLike | KeyObject): string {
+export async function getCloudfrontUrl(object_name: string, key_str: string): Promise<string> {
   const ts = Date.now()
   const payload = JSON.stringify({
     'object': object_name,
     'ts': ts
   })
-  console.log(payload);
-  const sign = createHmac('sha256', key).update(payload).digest('hex')
-  return `${Consts.CLOUD_FRONT_ENDPOINT}/${object_name}?_sign=${sign}&_ts=${ts}`;
+  const encoder = new TextEncoder()
+  const secretKeyData = encoder.encode(key_str)
+  const key = await crypto.subtle.importKey('raw', secretKeyData, {name: 'HMAC', hash: 'SHA-256'}, false, ['sign'])
+  const mac = await crypto.subtle.sign("HMAC", key, encoder.encode(payload))
+  return `${Consts.CLOUD_FRONT_ENDPOINT}/${object_name}?_sign=${bufferToHex(mac)}&_ts=${ts}`;
 }

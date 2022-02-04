@@ -5,6 +5,6 @@ describe('handle', () => {
     jest.resetModules()
   })
   test('handle GET', async () => {
-    console.log(getCloudfrontUrl('808663844.cover.png', 'test'))
+    console.log(await getCloudfrontUrl('808663844.cover.png', 'test'))
   })
 })
