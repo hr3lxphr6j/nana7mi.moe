@@ -187,7 +187,6 @@ async function handleGetIndexPage(request: Request): Promise<Response> {
 
   const liveInfo = await getLiveRoomInfo(Consts.ROOM_ID)
   const status = liveInfo.live_status == 1
-  const faviconType = 'image/jpg'
   return new Response(
     `
 <!DOCTYPE html>
@@ -197,8 +196,8 @@ async function handleGetIndexPage(request: Request): Promise<Response> {
   <title>nana7mi</title>
   <link 
       rel="icon" 
-      type="${faviconType}" 
-      href="data:${faviconType};base64,${await kvs.get('favicon')}">
+      type="image/jpg" 
+      href="${await getCloudfrontUrl("favicon.webp", CLOUD_FRONT_KEY)}">
   <link rel="stylesheet" href="https://lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/github-markdown-css/4.0.0/github-markdown.min.css">
   <link href="https://lf9-cdn-tos.bytecdntp.com/cdn/expire-1-M/video.js/7.11.5/video-js.min.css" type="text/css" rel="stylesheet" />
   <script src="https://lf9-cdn-tos.bytecdntp.com/cdn/expire-1-M/video.js/7.11.5/video.min.js" type="application/javascript"></script>
@@ -270,7 +269,7 @@ async function handleGetIndexPage(request: Request): Promise<Response> {
         preload="none"
         width="100%"
         height="650"
-        poster="${await getCloudfrontUrl("808663844.cover.png", CLOUD_FRONT_KEY)}"
+        poster="${await getCloudfrontUrl("808663844.cover.webp", CLOUD_FRONT_KEY)}"
         data-setup='{}'
       >
         <source src="${await getCloudfrontUrl("808663844.mp4", CLOUD_FRONT_KEY)}" type="video/mp4" />
