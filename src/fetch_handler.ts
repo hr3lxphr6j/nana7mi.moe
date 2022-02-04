@@ -259,7 +259,8 @@ async function handleGetIndexPage(request: Request): Promise<Response> {
   <h2>七海中举</h2>
   <div>
     <ul>
-        <li><a href="https://www.bilibili.com/video/BV11q4y1h7aC">2022-02-01 补档</a></div></li>
+        <li><del><a href="https://www.bilibili.com/video/BV11q4y1h7aC">2022-02-01 补档</a></del></li>
+        <li><a href="https://www.bilibili.com/video/BV1cY411L7du">2022-02-04 【沈默沈默】鲨鱼中举</a></li>
     </ul>
   <div>
     <video
