@@ -1,7 +1,7 @@
 import {getLiveRoomInfo} from './bilibili'
 import {Consts, Redirects} from './consts'
-import {getYDMStringByDate} from './utils'
-import {S3Client, HeadObjectCommand, GetObjectCommand} from '@aws-sdk/client-s3'
+import {getYDMStringByDate, getCloudfrontUrl} from './utils'
+import {S3Client, GetObjectCommand} from '@aws-sdk/client-s3'
 import {getSignedUrl} from '@aws-sdk/s3-request-presigner'
 
 export async function handleRequest(request: Request): Promise<Response> {
@@ -269,10 +269,10 @@ async function handleGetIndexPage(request: Request): Promise<Response> {
         preload="none"
         width="100%"
         height="650"
-        poster="//d23nnf6i8maqjf.cloudfront.net/808663844.cover.png"
+        poster="${getCloudfrontUrl("808663844.cover.png", CLOUD_FRONT_KEY)}"
         data-setup='{}'
       >
-        <source src="//d23nnf6i8maqjf.cloudfront.net/808663844.mp4" type="video/mp4" />
+        <source src="${getCloudfrontUrl("808663844.mp4", CLOUD_FRONT_KEY)}" type="video/mp4" />
         <p class="vjs-no-js">
           To view this video please enable JavaScript, and consider upgrading to a
           web browser that

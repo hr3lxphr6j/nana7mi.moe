@@ -12,6 +12,7 @@ export const Consts = {
   LIVE_SESSIONS_METRICS_CACHE_TTL: 6 * 60 * 60, // 6h
   LIVE_VIDEOS_LIST_CACHE_KEY: `live:${ROOM_ID}:videos:list`,
   LIVE_VIDEOS_LIST_CACHE_TTL: 30 * 60,
+  CLOUD_FRONT_ENDPOINT: 'https://d23nnf6i8maqjf.cloudfront.net'
 }
 
 export const Redirects: Map<string, string> = new Map([
